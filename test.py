@@ -1,5 +1,5 @@
 from azure.storage.blob import BlockBlobService
-from config import accountName, accountKey, blobName, containerName
+from FastApi.config import accountName, accountKey, blobName, containerName
 
 accountName = accountName
 accountKey = accountKey

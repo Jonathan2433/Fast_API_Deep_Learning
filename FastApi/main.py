@@ -9,7 +9,7 @@ from io import BytesIO
 from azure.storage.blob import BlockBlobService
 import torch
 from config import accountName, accountKey, containerName
-
+from fastapi.responses import StreamingResponse
 
 # Informations d'identification pour accéder au service Azure Blob Storage.
 accountName = accountName
@@ -113,3 +113,20 @@ async def detect_objects(info: ObjectDetectionInfo):
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/get-image/{blob_name}")
+async def get_image(blob_name: str):
+    try:
+        # Fetch the blob as a stream
+        stream = blob_service.get_blob_to_stream(container_name, blob_name)
+        return StreamingResponse(stream, media_type="image/jpeg")
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Blob {blob_name} not found")
+
+
+
+
+
+
+
+

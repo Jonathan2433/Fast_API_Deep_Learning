@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Classifier</title>
-     <style>
+    <title>Object Detection</title>
+    <style>
         body {
             font-family: 'Arial', sans-serif;
             background: #121212; /* Fond sombre */
             color: #c8e6c9; /* Texte en vert clair */
             margin: 0;
-            padding: 20px;
+            padding: 50px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -25,27 +25,24 @@
         form {
             margin-top: 20px;
             background-color: rgba(0, 0, 0, 0.5);
-            padding: 50px;
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 255, 0, 0.2);
         }
 
-        input[type="text"] {
-            width: 100%;
+        input[type="text"], input[type="submit"] {
             padding: 10px;
-            margin: 10px 0;
+            margin-top: 10px;
             border-radius: 5px;
             border: 1px solid #00e676;
             background-color: #000;
             color: #c8e6c9;
+            width: calc(100% - 22px); /* Adjust width to compensate for padding and border */
         }
 
         input[type="submit"] {
             background-color: #006400;
             color: #ffffff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
@@ -54,21 +51,22 @@
             background-color: #00e676;
         }
 
-        img {
-            max-width: 80%;
-            margin-top: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 255, 0, 0.3);
-            display: none;
+        #detection-list {
+            list-style-type: none; /* Remove default list style */
+            padding: 0; /* Remove default padding */
         }
 
-        #response-data {
-            margin-top: 20px;
-            font-size: 1.2em;
+        #detection-list li {
+            background: rgba(0, 0, 0, 0.3);
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
         }
+
+        /* Optional: Add more styles here */
     </style>
-<script>
-        async function classifyImage(event) {
+    <script>
+        async function detectObjects(event) {
             event.preventDefault();
 
             let blobName = document.getElementById('blob-name').value;
@@ -76,7 +74,7 @@
             let imageDisplay = document.getElementById('image-display');
 
             try {
-                const response = await fetch('http://127.0.0.1:8000/classify-image/', {
+                const response = await fetch('http://127.0.0.1:8000/detect-objects/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -89,32 +87,31 @@
                 }
 
                 const data = await response.json();
-                responseData.textContent = `Predicted class : ${data.predicted_class}`;
-                // Construire l'URL de l'image Azure pour l'affichage
-                // Note: Remplacez 'your_blob_service_base_url' par l'URL de base de votre service Blob
+                // Utilisez 'detections' pour accéder aux objets détectés, pas 'detected_objects'.
+                responseData.textContent = `Detected objects: ${JSON.stringify(data.detections)}`;
+
+                // Affichez l'image comme dans index.html ou traitez les données différemment selon vos besoins
                 let imageUrl = `https://dlflstorage/entree/${blobName}`;
                 imageDisplay.src = imageUrl;
                 imageDisplay.style.display = 'none';
             } catch (error) {
-                console.error('Could not classify the image:', error);
-                responseData.textContent = 'An error occurred while classifying the image.';
-                imageDisplay.style.display = 'none';
+                console.error('Could not detect objects:', error);
+                responseData.textContent = 'An error occurred while detecting objects.';
+                imageDisplay.style.display = 'block';
             }
         }
     </script>
 </head>
 <body>
-    <!-- Ajoutez ce lien quelque part dans le body de votre index.html -->
-    <a href="detect.html" style="color: #00e676; margin-top: 20px;">Go to Object Detection</a>
-
-    <h1>Image Classifier</h1>
-    <form onsubmit="classifyImage(event)">
+    <a href="index.html" style="color: #00e676; margin-top: 20px;">Go to Image Classifier</a>
+    <h1>Object Detection</h1>
+    <form onsubmit="detectObjects(event)">
         <label for="blob-name">Blob Name:</label><br>
         <input type="text" id="blob-name" name="blobName"><br>
-        <input type="submit" value="Classify Image">
+        <input type="submit" value="Detect Objects">
     </form>
-    <p id="response-data" ></p>
-    <!-- Ajouter une balise img pour afficher l'image classifiée -->
-    <img id="image-display" style="display: none;" alt="Classified Image"/>
+    <p id="response-data"></p>
+    <!-- Ajouter une balise img pour afficher l'image analysée -->
+    <img id="image-display" style="display: none;" alt="Detected Image"/>
 </body>
 </html>

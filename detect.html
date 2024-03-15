@@ -5,16 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Object Detection</title>
     <style>
-        /* Insérez ici le CSS de index.html pour conserver le même style */
-        /* Ajoutez ou modifiez selon vos besoins */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #121212;
+            color: #c8e6c9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-image: linear-gradient(145deg, #0a0f0b 30%, #002400 100%);
+        }
+
+        h1 {
+            color: #00e676;
+        }
+
+        form {
+            margin-top: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 255, 0, 0.2);
+        }
+
+        input[type="text"], input[type="submit"] {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: 1px solid #00e676;
+            background-color: #000;
+            color: #c8e6c9;
+            width: calc(100% - 22px);
+        }
+
+        input[type="submit"] {
+            background-color: #006400;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #00e676;
+        }
+
+        #detection-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #detection-list li {
+            background: rgba(0, 0, 0, 0.3);
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        img {
+            max-width: 500px; /* Adjust as needed */
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 255, 0, 0.3);
+        }
     </style>
+</head>
+<body>
+    <a href="index.html" style="color: #00e676; margin-top: 20px;">Go to Image Classifier</a>
+    <h1>Object Detection</h1>
+    <form onsubmit="detectObjects(event)">
+        <label for="blob-name">Blob Name:</label><br>
+        <input type="text" id="blob-name" name="blobName"><br>
+        <input type="submit" value="Detect Objects">
+    </form>
+    <ul id="detection-list"></ul>
+    <img id="image-display" style="display: none;" alt="Detected Image"/>
+
     <script>
         async function detectObjects(event) {
             event.preventDefault();
 
             let blobName = document.getElementById('blob-name').value;
-            let responseData = document.getElementById('response-data');
+            let detectionsList = document.getElementById('detection-list');
             let imageDisplay = document.getElementById('image-display');
+            detectionsList.innerHTML = ''; // Clear the list
 
             try {
                 const response = await fetch('http://127.0.0.1:8000/detect-objects/', {
@@ -30,30 +105,48 @@
                 }
 
                 const data = await response.json();
-                // Utilisez 'detections' pour accéder aux objets détectés, pas 'detected_objects'.
-                responseData.textContent = `Detected objects: ${JSON.stringify(data.detections)}`;
 
-                // Affichez l'image comme dans index.html ou traitez les données différemment selon vos besoins
-                let imageUrl = `https://your_account_name.blob.core.windows.net/your_container_name/${blobName}`;
-                imageDisplay.src = imageUrl;
-                imageDisplay.style.display = 'none';
-            } catch (error) {
-                console.error('Could not detect objects:', error);
-                responseData.textContent = 'An error occurred while detecting objects.';
-                imageDisplay.style.display = 'none';
+            // Only update the detection list if there are detections
+            if (data.detections && data.detections.length > 0) {
+                for (const detection of data.detections) {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `Detected ${detection.label} with confidence ${detection.score} at location ${detection.box}`;
+                    detectionsList.appendChild(listItem);
+                }
+
+            // Fetch the image as a Blob from your FastAPI backend
+                const imageUrl = `http://127.0.0.1:8000/get-image/${blobName}`;
+                const imageResponse = await fetch(imageUrl);
+                const imageBlob = await imageResponse.blob();
+                const objectURL = URL.createObjectURL(imageBlob);
+
+                imageDisplay.src = objectURL;
+                imageDisplay.onload = () => {
+                    imageDisplay.style.display = 'block';
+                };
+                imageDisplay.onerror = () => {
+                    console.error('Error loading image');
+                    imageDisplay.style.display = 'none';
+                };
+            } else {
+                // Handle the case where no objects are detected
+                const listItem = document.createElement('li');
+                listItem.textContent = 'No objects detected.';
+                detectionsList.appendChild(listItem);
             }
+
+        } catch (error) {
+            console.error('Could not detect objects:', error);
+            // Only display the error message if no detections have been listed
+            if (!detectionsList.firstChild) {
+                const listItem = document.createElement('li');
+                listItem.textContent = 'An error occurred while detecting objects.';
+                detectionsList.appendChild(listItem);
+            }
+            imageDisplay.style.display = 'none';
         }
-    </script>
-</head>
-<body>
-    <h1>Object Detection</h1>
-    <form onsubmit="detectObjects(event)">
-        <label for="blob-name">Blob Name:</label><br>
-        <input type="text" id="blob-name" name="blobName"><br>
-        <input type="submit" value="Detect Objects">
-    </form>
-    <p id="response-data"></p>
-    <!-- Ajouter une balise img pour afficher l'image analysée -->
-    <img id="image-display" style="display: none;" alt="Detected Image"/>
+    }
+</script>
+
 </body>
 </html>
