@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Classifier</title>
+     <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #121212; /* Fond sombre */
+            color: #c8e6c9; /* Texte en vert clair */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-image: linear-gradient(145deg, #0a0f0b 30%, #002400 100%);
+        }
+
+        h1 {
+            color: #00e676; /* Vert électrique */
+        }
+
+        form {
+            margin-top: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 255, 0, 0.2);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #00e676;
+            background-color: #000;
+            color: #c8e6c9;
+        }
+
+        input[type="submit"] {
+            background-color: #006400;
+            color: #ffffff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #00e676;
+        }
+
+        img {
+            max-width: 80%;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 255, 0, 0.3);
+            display: none;
+        }
+
+        #response-data {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+<script>
+        async function classifyImage(event) {
+            event.preventDefault();
+
+            let blobName = document.getElementById('blob-name').value;
+            let responseData = document.getElementById('response-data');
+            let imageDisplay = document.getElementById('image-display');
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/classify-image/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ blob_name: blobName }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                responseData.textContent = `Predicted class: ${data.predicted_class}`;
+                // Construire l'URL de l'image Azure pour l'affichage
+                // Note: Remplacez 'your_blob_service_base_url' par l'URL de base de votre service Blob
+                let imageUrl = `https://your_account_name.blob.core.windows.net/your_container_name/${blobName}`;
+                imageDisplay.src = imageUrl;
+                imageDisplay.style.display = 'none';
+            } catch (error) {
+                console.error('Could not classify the image:', error);
+                responseData.textContent = 'An error occurred while classifying the image.';
+                imageDisplay.style.display = 'none';
+            }
+        }
+    </script>
+</head>
+<body>
+    <!-- Ajoutez ce lien quelque part dans le body de votre index.html -->
+    <a href="detect.html" style="color: #00e676; margin-top: 20px;">Go to Object Detection</a>
+
+    <h1>Image Classifier</h1>
+    <form onsubmit="classifyImage(event)">
+        <label for="blob-name">Blob Name:</label><br>
+        <input type="text" id="blob-name" name="blobName"><br>
+        <input type="submit" value="Classify Image">
+    </form>
+    <p id="response-data" ></p>
+    <!-- Ajouter une balise img pour afficher l'image classifiée -->
+    <img id="image-display" style="display: none;" alt="Classified Image"/>
+</body>
+</html>

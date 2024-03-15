@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Detection</title>
+    <style>
+        /* Insérez ici le CSS de index.html pour conserver le même style */
+        /* Ajoutez ou modifiez selon vos besoins */
+    </style>
+    <script>
+        async function detectObjects(event) {
+            event.preventDefault();
+
+            let blobName = document.getElementById('blob-name').value;
+            let responseData = document.getElementById('response-data');
+            let imageDisplay = document.getElementById('image-display');
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/detect-objects/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ blob_name: blobName }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                // Utilisez 'detections' pour accéder aux objets détectés, pas 'detected_objects'.
+                responseData.textContent = `Detected objects: ${JSON.stringify(data.detections)}`;
+
+                // Affichez l'image comme dans index.html ou traitez les données différemment selon vos besoins
+                let imageUrl = `https://your_account_name.blob.core.windows.net/your_container_name/${blobName}`;
+                imageDisplay.src = imageUrl;
+                imageDisplay.style.display = 'none';
+            } catch (error) {
+                console.error('Could not detect objects:', error);
+                responseData.textContent = 'An error occurred while detecting objects.';
+                imageDisplay.style.display = 'none';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Object Detection</h1>
+    <form onsubmit="detectObjects(event)">
+        <label for="blob-name">Blob Name:</label><br>
+        <input type="text" id="blob-name" name="blobName"><br>
+        <input type="submit" value="Detect Objects">
+    </form>
+    <p id="response-data"></p>
+    <!-- Ajouter une balise img pour afficher l'image analysée -->
+    <img id="image-display" style="display: none;" alt="Detected Image"/>
+</body>
+</html>
