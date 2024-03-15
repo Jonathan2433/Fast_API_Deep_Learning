@@ -8,11 +8,13 @@ from PIL import Image
 from io import BytesIO
 from azure.storage.blob import BlockBlobService
 import torch
+from config import accountName, accountKey, containerName
+
 
 # Informations d'identification pour accéder au service Azure Blob Storage.
-accountName = "dlflstorage"
-accountKey = "kSGlxWZmB1SOlyC8jpwJ5E2GdEqt7hlB09gDSwwPXMUznJVu+EyhK5g9+Hjq3Ixp4RZruble1cPO+AStovskFQ=="
-containerName = "entree"
+accountName = accountName
+accountKey = accountKey
+containerName = containerName
 
 # Définition d'un modèle Pydantic pour structurer et valider les données d'entrée de l'API.
 # Ici, l'API attend un nom de blob (fichier dans Azure Blob Storage) comme entrée.
